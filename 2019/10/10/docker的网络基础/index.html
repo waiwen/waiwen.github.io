@@ -1,0 +1,452 @@
+<!DOCTYPE html>
+<html>
+  <head>
+  <meta http-equiv="content-type" content="text/html; charset=utf-8">
+  <meta content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=0" name="viewport">
+  <meta name="description" content="waiwen&#39;s blog">
+  <meta name="keyword" content="hexo-theme, vuejs">
+  
+    <link rel="shortcut icon" href="/css/images/logo.png">
+  
+  <title>
+    
+      docker的网络基础 | Hexo
+    
+  </title>
+  <link href="//cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css" rel="stylesheet">
+  <link href="//cdnjs.cloudflare.com/ajax/libs/nprogress/0.2.0/nprogress.min.css" rel="stylesheet">
+  <link href="//cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/styles/tomorrow.min.css" rel="stylesheet">
+  <link rel="stylesheet" href="/css/style.css">
+  
+   <link rel="stylesheet" href="/css/plugins/gitment.css">
+  
+  <script src="//cdnjs.cloudflare.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>
+  <script src="//cdnjs.cloudflare.com/ajax/libs/geopattern/1.2.3/js/geopattern.min.js"></script>
+  <script src="//cdnjs.cloudflare.com/ajax/libs/nprogress/0.2.0/nprogress.min.js"></script>
+  
+    <script src="/js/qrious.js"></script>
+  
+  
+    <script src="/js/gitment.js"></script>
+  
+  
+  
+    <!-- MathJax support START -->
+    <script type="text/x-mathjax-config">
+      MathJax.Hub.Config({
+        tex2jax: {
+          inlineMath: [ ['$','$'], ["\\(","\\)"]  ],
+          processEscapes: true,
+          skipTags: ['script', 'noscript', 'style', 'textarea', 'pre', 'code']
+        }
+      });
+    </script>
+
+    <script type="text/x-mathjax-config">
+      MathJax.Hub.Queue(function() {
+        var all = MathJax.Hub.getAllJax(), i;
+        for (i=0; i < all.length; i += 1) {
+          all[i].SourceElement().parentNode.className += ' has-jax';
+        }
+      });
+    </script>
+    <script type="text/javascript" src="//cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <!-- MathJax support END -->
+  
+
+
+</head>
+<div class="wechat-share">
+  <img src="/css/images/logo.png" />
+</div>
+
+  <body>
+    <header class="header fixed-header">
+  <div class="header-container">
+    <a class="home-link" href="/">
+      <div class="logo"></div>
+      <span>Hexo</span>
+    </a>
+    <ul class="right-list">
+      
+        <li class="list-item">
+          
+            <a href="/" class="item-link">Home</a>
+          
+        </li>
+      
+        <li class="list-item">
+          
+            <a href="/tags/" class="item-link">Tags</a>
+          
+        </li>
+      
+        <li class="list-item">
+          
+            <a href="/archives/" class="item-link">Archives</a>
+          
+        </li>
+      
+        <li class="list-item">
+          
+            <a href="/about/" class="item-link">About</a>
+          
+        </li>
+      
+    </ul>
+    <div class="menu">
+      <span class="icon-bar"></span>
+      <span class="icon-bar"></span>
+      <span class="icon-bar"></span>
+    </div>
+    <div class="menu-mask">
+      <ul class="menu-list">
+        
+          <li class="menu-item">
+            
+              <a href="/" class="menu-link">Home</a>
+            
+          </li>
+        
+          <li class="menu-item">
+            
+              <a href="/tags/" class="menu-link">Tags</a>
+            
+          </li>
+        
+          <li class="menu-item">
+            
+              <a href="/archives/" class="menu-link">Archives</a>
+            
+          </li>
+        
+          <li class="menu-item">
+            
+              <a href="/about/" class="menu-link">About</a>
+            
+          </li>
+        
+      </ul>
+    </div>
+  </div>
+</header>
+
+    <div id="article-banner">
+  <h2>docker的网络基础</h2>
+  <p class="post-date">2019-10-10</p>
+  <div class="arrow-down">
+    <a href="javascript:;" target="_blank" rel="noopener"></a>
+  </div>
+</div>
+<main class="app-body flex-box">
+  <!-- Article START -->
+  <article class="post-article">
+    <section class="markdown-content"><h1>docker的网络基础</h1>
+<h2>一、前言</h2>
+<p>很多开发者用得最多的就是使用 -p -P 参数，将容器端口映射到主机端口，而且使用的是docker的默认创建的网络，这里简要介绍一下docker常用的网络模式</p>
+<h2>二、术语简介</h2>
+<p>docker网络中涉及的术语。</p>
+<h3>1、网桥(bridge)</h3>
+<p>docker中的虚拟网桥，类似于现实中的物理交换机、中转站，主机通过虚拟网桥与多个容器相互通信。
+你可以使用brctl show命令查看主机中的网桥设备：
+<img src="https://cdn.nlark.com/yuque/0/2019/png/192688/1570670318949-9c1170db-92b5-4f5c-8bc3-f45a518ad82a.png#align=left&amp;display=inline&amp;height=136&amp;name=image.png&amp;originHeight=136&amp;originWidth=846&amp;search=&amp;size=18044&amp;status=done&amp;width=846" alt="image.png" /></p>
+<blockquote>
+<p>brctl 命令使用  yum install -y bridge-utils 进行安装</p>
+</blockquote>
+<h3>2、网络模式(driver)</h3>
+<p>driver定义了网络的行为模式，即表示该网络通过何种模型进行通信、流量的转发。网络基于driver创建。
+docker的driver分别如下，常用的是前3种。</p>
+<ol>
+<li><strong>host</strong>：容器将不会虚拟出自己的网卡，配置自己的IP等，而是使用宿主机的IP和端口。</li>
+<li><strong>None</strong>：该模式关闭了容器的网络功能。</li>
+<li><strong>Bridge</strong>：此模式会为每一个容器分配、设置IP等，并将容器连接到一个虚拟网桥，通过虚拟网桥以及Iptables nat表配置与宿主机通信。</li>
+<li><strong>Container</strong>：创建的容器不会创建自己的网卡，配置自己的IP，而是和一个指定的容器共享IP、端口范围。</li>
+</ol>
+<h3>3、虚拟网卡(veth pair)</h3>
+<p>设备与设备之间的连接需要使用网卡，例如主机与网桥的连接，网桥与容器的连接。
+网卡总是成对出现，数据从一头进入，就会从另一边出来。</p>
+<h3>4、网络（network）</h3>
+<p>顾名思义，若干设备通过联结构成了可以通信的网络，
+因此，从docker的角度来看，主机、虚拟网桥、虚拟网卡、容器构成了docker的其中一个网络。
+你可以使用docker network ls 查看docker中现有的网络。其中bridge、host、none是docker启动时以三种driver默认创建的。</p>
+<p><img src="https://cdn.nlark.com/yuque/0/2019/png/192688/1570670240417-a9612b0b-db18-49e1-b46f-2c8aee2a8b69.png#align=left&amp;display=inline&amp;height=142&amp;name=image.png&amp;originHeight=142&amp;originWidth=733&amp;search=&amp;size=18933&amp;status=done&amp;width=733" alt="image.png" /></p>
+<h2>三、bridge模式</h2>
+<p>本文重点讲解bridge网络。</p>
+<p>上面有提及到，docker在启动时会默认以三种driver启动三个默认网络。</p>
+<blockquote>
+<p>docker network ls查看存在的网络</p>
+</blockquote>
+<p>默认的bridge网络依赖docker0网桥。</p>
+<p><img src="https://cdn.nlark.com/yuque/0/2019/png/192688/1570612980439-11b91e8e-d88e-43fa-9484-e8fadfa2f49f.png#align=left&amp;display=inline&amp;height=156&amp;name=image.png&amp;originHeight=156&amp;originWidth=815&amp;search=&amp;size=21360&amp;status=done&amp;width=815" alt="image.png" /></p>
+<p>docker run启动的容器如果不指定网络，
+默认使用的是bridge网络
+下面以我主机中现存的三个container为例，分别是consul1，consul2和mysql5.7，均连接到默认的网络中。</p>
+<p><img src="https://cdn.nlark.com/yuque/0/2019/png/192688/1570613105024-2d553b18-8f3b-4adb-9321-a66bc8a8ca46.png#align=left&amp;display=inline&amp;height=142&amp;name=image.png&amp;originHeight=142&amp;originWidth=919&amp;search=&amp;size=22168&amp;status=done&amp;width=919" alt="image.png" /></p>
+<p>执行 brctl show命令查看 存在的虚拟网桥，veth表示连接容器和网桥的网卡。一头为veth0连接到容器，一头以类似veth67的命名连接到网桥中。</p>
+<p><img src="https://cdn.nlark.com/yuque/0/2019/png/192688/1570612586774-d4892980-db56-4292-939c-0466d015a224.png#align=left&amp;display=inline&amp;height=144&amp;name=image.png&amp;originHeight=144&amp;originWidth=932&amp;search=&amp;size=20733&amp;status=done&amp;width=932" alt="image.png" /></p>
+<p>执行 ip addr 命令可以看到主机中的虚拟网卡设备情况。</p>
+<p><img src="https://cdn.nlark.com/yuque/0/2019/png/192688/1570612676408-806d0925-e5b7-40c8-b6e6-7947b30e0ed9.png#align=left&amp;display=inline&amp;height=649&amp;name=image.png&amp;originHeight=649&amp;originWidth=1378&amp;search=&amp;size=122802&amp;status=done&amp;width=1378" alt="image.png" /></p>
+<p>执行 docker network inspect bridge 查看网络详情</p>
+<ol>
+<li>该网络的 Driver 是 <strong>bridge</strong></li>
+<li>分配的为网段为：** 172.17.0.0/16**</li>
+<li>网关为： <strong>172.17.0.1</strong></li>
+<li>连接到网络中的容器有三个，ip地址分别为** 172.17.0.2~4**。</li>
+<li>以及其他的网络设置Options:</li>
+</ol>
+<p></p>
+<p>| 设置 | 创建时命令行配置 | 作用 |
+| --- | --- | --- |
+| .default_bridge | – | 创建<a href="https://www.centos.bz/tag/linux/" target="_blank" rel="noopener">Linux</a> bridge使用的bridge名称 |
+| .enable_ip_masquerade | –ip-masq | 启用IP伪装 |
+| .enable_icc | –icc | 启用或禁用容器间连接 |
+| .host_binding_ipv4 | –ip | 绑定容器端口时默认绑定的IP |
+| driver.mtu | –mtu | 设置容器网络MTU |</p>
+<figure class="highlight json"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br></pre></td><td class="code"><pre><span class="line"></span><br><span class="line">&#123;</span><br><span class="line">    <span class="attr">"Name"</span>: <span class="string">"bridge"</span>,</span><br><span class="line">    <span class="attr">"Id"</span>: <span class="string">"c87c19aed810fbb175ed1f81b1a2b1293246a11fd6d1767969aa910751fce754"</span>,</span><br><span class="line">    <span class="attr">"Created"</span>: <span class="string">"2019-09-29T10:06:01.861761113+08:00"</span>,</span><br><span class="line">    <span class="attr">"Scope"</span>: <span class="string">"local"</span>,</span><br><span class="line">    <span class="attr">"Driver"</span>: <span class="string">"bridge"</span>,</span><br><span class="line">    <span class="attr">"EnableIPv6"</span>: <span class="literal">false</span>,</span><br><span class="line">    <span class="attr">"IPAM"</span>: &#123;</span><br><span class="line">        <span class="attr">"Driver"</span>: <span class="string">"default"</span>,</span><br><span class="line">        <span class="attr">"Options"</span>: <span class="literal">null</span>,</span><br><span class="line">        <span class="attr">"Config"</span>: [</span><br><span class="line">            &#123;</span><br><span class="line">                <span class="attr">"Subnet"</span>: <span class="string">"172.17.0.0/16"</span>,       </span><br><span class="line">                <span class="attr">"Gateway"</span>: <span class="string">"172.17.0.1"</span>   </span><br><span class="line">            &#125;</span><br><span class="line">        ]</span><br><span class="line">    &#125;,</span><br><span class="line">    <span class="attr">"Internal"</span>: <span class="literal">false</span>,</span><br><span class="line">    <span class="attr">"Attachable"</span>: <span class="literal">false</span>,</span><br><span class="line">    <span class="attr">"Ingress"</span>: <span class="literal">false</span>,</span><br><span class="line">    <span class="attr">"ConfigFrom"</span>: &#123;</span><br><span class="line">        <span class="attr">"Network"</span>: <span class="string">""</span></span><br><span class="line">    &#125;,</span><br><span class="line">    <span class="attr">"ConfigOnly"</span>: <span class="literal">false</span>,</span><br><span class="line">    <span class="attr">"Containers"</span>: &#123;</span><br><span class="line">        <span class="attr">"45897d4f86c5a167fb49411ebfe2adcf96b21aec971229c7d1e25ea43ffcd1ef"</span>: &#123;</span><br><span class="line">            <span class="attr">"Name"</span>: <span class="string">"consul2"</span>,</span><br><span class="line">            <span class="attr">"EndpointID"</span>: <span class="string">"7e581828751c92817dab5603496522199432bd4c32a40e1beca7d3b433add705"</span>,</span><br><span class="line">            <span class="attr">"MacAddress"</span>: <span class="string">"02:42:ac:11:00:03"</span>,</span><br><span class="line">            <span class="attr">"IPv4Address"</span>: <span class="string">"172.17.0.3/16"</span>,</span><br><span class="line">            <span class="attr">"IPv6Address"</span>: <span class="string">""</span></span><br><span class="line">        &#125;,</span><br><span class="line">        <span class="attr">"89a48e95f34a1447ce16b56be10a1ea8298e84259fd792c7d13874b611c8a897"</span>: &#123;</span><br><span class="line">            <span class="attr">"Name"</span>: <span class="string">"consul1"</span>,</span><br><span class="line">            <span class="attr">"EndpointID"</span>: <span class="string">"efe2b71351d0cd643814f61ca2020820f732f9567e8e070323ade4f08d7deabf"</span>,</span><br><span class="line">            <span class="attr">"MacAddress"</span>: <span class="string">"02:42:ac:11:00:02"</span>,</span><br><span class="line">            <span class="attr">"IPv4Address"</span>: <span class="string">"172.17.0.2/16"</span>,</span><br><span class="line">            <span class="attr">"IPv6Address"</span>: <span class="string">""</span></span><br><span class="line">        &#125;,</span><br><span class="line">        <span class="attr">"a30ac707d754437bb55b19bb309204c21ed63430906e62e5ff29ddefdd1837a1"</span>: &#123;</span><br><span class="line">            <span class="attr">"Name"</span>: <span class="string">"mysql5.7"</span>,</span><br><span class="line">            <span class="attr">"EndpointID"</span>: <span class="string">"f9821cfb205e3665f358cc1c4ba217ac1cfe79c3e01ec5361ebdb94bd5df18c2"</span>,</span><br><span class="line">            <span class="attr">"MacAddress"</span>: <span class="string">"02:42:ac:11:00:04"</span>,</span><br><span class="line">            <span class="attr">"IPv4Address"</span>: <span class="string">"172.17.0.4/16"</span>,</span><br><span class="line">            <span class="attr">"IPv6Address"</span>: <span class="string">""</span></span><br><span class="line">        &#125;</span><br><span class="line">    &#125;,</span><br><span class="line">    <span class="attr">"Options"</span>: &#123;</span><br><span class="line">        <span class="attr">"com.docker.network.bridge.default_bridge"</span>: <span class="string">"true"</span>,</span><br><span class="line">        <span class="attr">"com.docker.network.bridge.enable_icc"</span>: <span class="string">"true"</span>,</span><br><span class="line">        <span class="attr">"com.docker.network.bridge.enable_ip_masquerade"</span>: <span class="string">"true"</span>,</span><br><span class="line">        <span class="attr">"com.docker.network.bridge.host_binding_ipv4"</span>: <span class="string">"0.0.0.0"</span>,</span><br><span class="line">        <span class="attr">"com.docker.network.bridge.name"</span>: <span class="string">"docker0"</span>,</span><br><span class="line">        <span class="attr">"com.docker.network.driver.mtu"</span>: <span class="string">"1500"</span></span><br><span class="line">    &#125;,</span><br><span class="line">    <span class="attr">"Labels"</span>: &#123;&#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<h2>四、自创建docker网络</h2>
+<p>docker创建网络的参数，具体参数代表的意思可以看英文注释，或者查阅官网</p>
+<p><img src="https://cdn.nlark.com/yuque/0/2019/png/192688/1570688200303-a4a8c4bd-2e02-4e40-bb2c-1170ef52fa72.png#align=left&amp;display=inline&amp;height=563&amp;name=image.png&amp;originHeight=563&amp;originWidth=1116&amp;search=&amp;size=75315&amp;status=done&amp;width=1116" alt="image.png" /></p>
+<p>创建一个以bridge为driver的网络new_net</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"></span><br><span class="line">docker network create --driver bridge new_net</span><br></pre></td></tr></table></figure>
+<p>启动测试容器并且连接到该网络</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"></span><br><span class="line">docker run -itd --name=busybox1 --network=new_net busybox</span><br><span class="line">docker run -itd --name=busybox2 --network=new_net busybox</span><br><span class="line">docker run -itd --name=busybox3 --network=new_net busybox</span><br></pre></td></tr></table></figure>
+<p>进入到容器中</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"></span><br><span class="line">docker exec -it busybox1 bash</span><br></pre></td></tr></table></figure>
+<p>在容器 ping busybox2或者busybox3,能通过容器名直接ping通，当然 ping ip也是一定可以的</p>
+<p><img src="https://cdn.nlark.com/yuque/0/2019/png/192688/1570688752572-e2213af9-631a-4b16-81ee-711623a588da.png#align=left&amp;display=inline&amp;height=144&amp;name=image.png&amp;originHeight=144&amp;originWidth=735&amp;search=&amp;size=20333&amp;status=done&amp;width=735" alt="image.png" /></p>
+<p>这是因为docker的网络内嵌了dns服务器。
+在容器中执行 cat /etc/resolv.conf，可以看到该dns的地址。</p>
+<p><img src="https://cdn.nlark.com/yuque/0/2019/png/192688/1570688860239-17a2dd47-9b48-4e01-b60a-2f5788b800b0.png#align=left&amp;display=inline&amp;height=65&amp;name=image.png&amp;originHeight=65&amp;originWidth=728&amp;search=&amp;size=6064&amp;status=done&amp;width=728" alt="image.png" /></p>
+<p>再看一下主机的虚拟网桥，红色框框部分即是自建的网络中的网桥和网卡设备，可以按照上面的思路进行验证。</p>
+<p><img src="https://cdn.nlark.com/yuque/0/2019/png/192688/1570689242169-5ed6e95a-dc78-42d4-a35a-fa7f5e348ab1.png#align=left&amp;display=inline&amp;height=223&amp;name=image.png&amp;originHeight=223&amp;originWidth=1022&amp;search=&amp;size=29594&amp;status=done&amp;width=1022" alt="image.png" /></p>
+<p>docker网络构成图大概如下：</p>
+<p><img src="https://cdn.nlark.com/yuque/0/2019/jpeg/192688/1570689497806-4ef3c6eb-99ff-4610-b819-0e679cb384d8.jpeg#align=left&amp;display=inline&amp;height=413&amp;originHeight=413&amp;originWidth=443&amp;search=&amp;size=0&amp;status=done&amp;width=443" alt="" /></p>
+<h3>参考：</h3>
+<p><a href="https://yeasy.gitbooks.io/docker_practice/advanced_network/" target="_blank" rel="noopener">高级网络配置 </a>
+<a href="https://www.cnblogs.com/zuxing/articles/8780661.html" target="_blank" rel="noopener">Docker：网络模式详解</a>
+<a href="https://zhuanlan.zhihu.com/p/37309441" target="_blank" rel="noopener">关于 docker 的网络，你需要知道的事情 - 程天小邮差的文章 - 知乎</a>
+<a href="https://www.centos.bz/2017/01/docker-network-create-create-a-network/" target="_blank" rel="noopener">Docker命令行参考(29) – docker network create创建一个网络</a></p>
+</section>
+    <!-- Tags START -->
+    
+      <div class="tags">
+        <span>Tags:</span>
+        
+  <a href="/tags#docker" >
+    <span class="tag-code">docker</span>
+  </a>
+
+  <a href="/tags#网络" >
+    <span class="tag-code">网络</span>
+  </a>
+
+      </div>
+    
+    <!-- Tags END -->
+    <!-- NAV START -->
+    
+  <div class="nav-container">
+    <!-- reverse left and right to put prev and next in a more logic postition -->
+    
+    
+      <a class="nav-right" href="/2019/11/04/go-micro%E4%BD%BF%E7%94%A8etcd%E4%BD%9C%E4%B8%BA%E9%85%8D%E7%BD%AE%E4%B8%AD%E5%BF%83/">
+        
+          go-micro使用etcd作为配置中心
+        
+        <span class="nav-arrow"> →</span>
+      </a>
+    
+  </div>
+
+    <!-- NAV END -->
+    <!-- 打赏 START -->
+    
+      <div class="money-like">
+        <div class="reward-btn">
+          赏
+          <span class="money-code">
+            <span class="alipay-code">
+              <div class="code-image"></div>
+              <b>使用支付宝打赏</b>
+            </span>
+            <span class="wechat-code">
+              <div class="code-image"></div>
+              <b>使用微信打赏</b>
+            </span>
+          </span>
+        </div>
+        <p class="notice">若你觉得我的文章对你有帮助，欢迎点击上方按钮对我打赏</p>
+      </div>
+    
+    <!-- 打赏 END -->
+    <!-- 二维码 START -->
+    
+      <div class="qrcode">
+        <canvas id="share-qrcode"></canvas>
+        <p class="notice">扫描二维码，分享此文章</p>
+      </div>
+    
+    <!-- 二维码 END -->
+    
+      <!-- Gitment START -->
+      <div id="comments"></div>
+      <!-- Gitment END -->
+    
+  </article>
+  <!-- Article END -->
+  <!-- Catalog START -->
+  
+    <aside class="catalog-container">
+  <div class="toc-main">
+    <strong class="toc-title">Catalog</strong>
+    
+      <ol class="toc-nav"><li class="toc-nav-item toc-nav-level-1"><a class="toc-nav-link" href="#null"><span class="toc-nav-text">docker的网络基础</span></a><ol class="toc-nav-child"><li class="toc-nav-item toc-nav-level-2"><a class="toc-nav-link" href="#null"><span class="toc-nav-text">一、前言</span></a></li><li class="toc-nav-item toc-nav-level-2"><a class="toc-nav-link" href="#null"><span class="toc-nav-text">二、术语简介</span></a><ol class="toc-nav-child"><li class="toc-nav-item toc-nav-level-3"><a class="toc-nav-link" href="#null"><span class="toc-nav-text">1、网桥(bridge)</span></a></li><li class="toc-nav-item toc-nav-level-3"><a class="toc-nav-link" href="#null"><span class="toc-nav-text">2、网络模式(driver)</span></a></li><li class="toc-nav-item toc-nav-level-3"><a class="toc-nav-link" href="#null"><span class="toc-nav-text">3、虚拟网卡(veth pair)</span></a></li><li class="toc-nav-item toc-nav-level-3"><a class="toc-nav-link" href="#null"><span class="toc-nav-text">4、网络（network）</span></a></li></ol></li><li class="toc-nav-item toc-nav-level-2"><a class="toc-nav-link" href="#null"><span class="toc-nav-text">三、bridge模式</span></a></li><li class="toc-nav-item toc-nav-level-2"><a class="toc-nav-link" href="#null"><span class="toc-nav-text">四、自创建docker网络</span></a><ol class="toc-nav-child"><li class="toc-nav-item toc-nav-level-3"><a class="toc-nav-link" href="#null"><span class="toc-nav-text">参考：</span></a></li></ol></li></ol></li></ol>
+    
+  </div>
+</aside>
+  
+  <!-- Catalog END -->
+</main>
+
+<script>
+  (function () {
+    var url = 'http://yoursite.com/2019/10/10/docker的网络基础/';
+    var banner = ''
+    if (banner !== '' && banner !== 'undefined' && banner !== 'null') {
+      $('#article-banner').css({
+        'background-image': 'url(' + banner + ')'
+      })
+    } else {
+      $('#article-banner').geopattern(url)
+    }
+    $('.header').removeClass('fixed-header')
+
+    // error image
+    $(".markdown-content img").on('error', function() {
+      $(this).attr('src', 'http://file.muyutech.com/error-img.png')
+      $(this).css({
+        'cursor': 'default'
+      })
+    })
+
+    // zoom image
+    $(".markdown-content img").on('click', function() {
+      var src = $(this).attr('src')
+      if (src !== 'http://file.muyutech.com/error-img.png') {
+        var imageW = $(this).width()
+        var imageH = $(this).height()
+
+        var zoom = ($(window).width() * 0.95 / imageW).toFixed(2)
+        zoom = zoom < 1 ? 1 : zoom
+        zoom = zoom > 2 ? 2 : zoom
+        var transY = (($(window).height() - imageH) / 2).toFixed(2)
+
+        $('body').append('<div class="image-view-wrap"><div class="image-view-inner"><img src="'+ src +'" /></div></div>')
+        $('.image-view-wrap').addClass('wrap-active')
+        $('.image-view-wrap img').css({
+          'width': `${imageW}`,
+          'transform': `translate3d(0, ${transY}px, 0) scale3d(${zoom}, ${zoom}, 1)`
+        })
+        $('html').css('overflow', 'hidden')
+
+        $('.image-view-wrap').on('click', function() {
+          $(this).remove()
+          $('html').attr('style', '')
+        })
+      }
+    })
+  })();
+</script>
+
+
+  <script>
+    var qr = new QRious({
+      element: document.getElementById('share-qrcode'),
+      value: document.location.href
+    });
+  </script>
+
+
+
+  <script>
+    var gitmentConfig = "yanm1ng";
+    if (gitmentConfig !== 'undefined') {
+      var gitment = new Gitment({
+        id: "docker的网络基础",
+        owner: "yanm1ng",
+        repo: "yanm1ng.github.io",
+        oauth: {
+          client_id: "0f87e490e00ee3fd87ef",
+          client_secret: "4a9d2b148e7971c2201ad12131ce8bf8159ccd2e"
+        },
+        theme: {
+          render(state, instance) {
+            const container = document.createElement('div')
+            container.lang = "en-US"
+            container.className = 'gitment-container gitment-root-container'
+            container.appendChild(instance.renderHeader(state, instance))
+            container.appendChild(instance.renderEditor(state, instance))
+            container.appendChild(instance.renderComments(state, instance))
+            container.appendChild(instance.renderFooter(state, instance))
+            return container;
+          }
+        }
+      })
+      gitment.render(document.getElementById('comments'))
+    }
+  </script>
+
+
+
+
+    <div class="scroll-top">
+  <span class="arrow-icon"></span>
+</div>
+    <footer class="app-footer">
+  <p class="copyright">
+    &copy; 2019 | Proudly powered by <a href="https://hexo.io" target="_blank">Hexo</a>
+    <br>
+    Theme by <a href="https://github.com/yanm1ng" target="_blank" rel="noopener">yanm1ng</a>
+  </p>
+</footer>
+
+<script>
+  function async(u, c) {
+    var d = document, t = 'script',
+      o = d.createElement(t),
+      s = d.getElementsByTagName(t)[0];
+    o.src = u;
+    if (c) { o.addEventListener('load', function (e) { c(null, e); }, false); }
+    s.parentNode.insertBefore(o, s);
+  }
+</script>
+<script>
+  async("//cdnjs.cloudflare.com/ajax/libs/fastclick/1.0.6/fastclick.min.js", function(){
+    FastClick.attach(document.body);
+  })
+</script>
+
+<script>
+  var hasLine = 'true';
+  async("//cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/highlight.min.js", function(){
+    $('figure pre').each(function(i, block) {
+      var figure = $(this).parents('figure');
+      if (hasLine === 'false') {
+        figure.find('.gutter').hide();
+      }
+      var lang = figure.attr('class').split(' ')[1] || 'code';
+      var codeHtml = $(this).html();
+      var codeTag = document.createElement('code');
+      codeTag.className = lang;
+      codeTag.innerHTML = codeHtml;
+      $(this).attr('class', '').empty().html(codeTag);
+      figure.attr('data-lang', lang.toUpperCase());
+      hljs.highlightBlock(block);
+    });
+  })
+</script>
+<!-- Baidu Tongji -->
+
+<script src="/js/script.js"></script>
+  </body>
+</html>
