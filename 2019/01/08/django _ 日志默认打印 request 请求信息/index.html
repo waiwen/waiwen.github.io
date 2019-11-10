@@ -1,0 +1,380 @@
+<!DOCTYPE html>
+<html>
+  <head>
+  <meta http-equiv="content-type" content="text/html; charset=utf-8">
+  <meta content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=0" name="viewport">
+  <meta name="description" content="微服务、go、golang、Python、Django、计算机网络、计算机基础">
+  <meta name="keyword" content="微服务，go，golang，Python，Django，计算机网络，计算机基础">
+  
+    <link rel="shortcut icon" href="/css/images/logo.png">
+  
+  <title>
+    
+      日志默认打印 request 请求信息 | 歪文 | waiwen
+    
+  </title>
+  <link href="//cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css" rel="stylesheet">
+  <link href="//cdnjs.cloudflare.com/ajax/libs/nprogress/0.2.0/nprogress.min.css" rel="stylesheet">
+  <link href="//cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/styles/[object Object].min.css" rel="stylesheet">
+  <link rel="stylesheet" href="/css/style.css">
+  
+   <link rel="stylesheet" href="/css/plugins/gitment.css">
+  
+  <script src="//cdnjs.cloudflare.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>
+  <script src="//cdnjs.cloudflare.com/ajax/libs/geopattern/1.2.3/js/geopattern.min.js"></script>
+  <script src="//cdnjs.cloudflare.com/ajax/libs/nprogress/0.2.0/nprogress.min.js"></script>
+  
+  
+    <script src="/js/gitment.js"></script>
+  
+  
+  
+    <!-- MathJax support START -->
+    <script type="text/x-mathjax-config">
+      MathJax.Hub.Config({
+        tex2jax: {
+          inlineMath: [ ['$','$'], ["\\(","\\)"]  ],
+          processEscapes: true,
+          skipTags: ['script', 'noscript', 'style', 'textarea', 'pre', 'code']
+        }
+      });
+    </script>
+
+    <script type="text/x-mathjax-config">
+      MathJax.Hub.Queue(function() {
+        var all = MathJax.Hub.getAllJax(), i;
+        for (i=0; i < all.length; i += 1) {
+          all[i].SourceElement().parentNode.className += ' has-jax';
+        }
+      });
+    </script>
+    <script type="text/javascript" src="//cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <!-- MathJax support END -->
+  
+
+
+</head>
+<div class="wechat-share">
+  <img src="/css/images/logo.png" />
+</div>
+
+  <body>
+    <header class="header fixed-header">
+  <div class="header-container">
+    <a class="home-link" href="/">
+      <div class="logo"></div>
+      <span>歪文 | waiwen</span>
+    </a>
+    <ul class="right-list">
+      
+        <li class="list-item">
+          
+            <a href="/" class="item-link">Home</a>
+          
+        </li>
+      
+        <li class="list-item">
+          
+            <a href="/tags/" class="item-link">Tags</a>
+          
+        </li>
+      
+        <li class="list-item">
+          
+            <a href="/archives/" class="item-link">Archives</a>
+          
+        </li>
+      
+        <li class="list-item">
+          
+            <a href="/about/" class="item-link">About</a>
+          
+        </li>
+      
+    </ul>
+    <div class="menu">
+      <span class="icon-bar"></span>
+      <span class="icon-bar"></span>
+      <span class="icon-bar"></span>
+    </div>
+    <div class="menu-mask">
+      <ul class="menu-list">
+        
+          <li class="menu-item">
+            
+              <a href="/" class="menu-link">Home</a>
+            
+          </li>
+        
+          <li class="menu-item">
+            
+              <a href="/tags/" class="menu-link">Tags</a>
+            
+          </li>
+        
+          <li class="menu-item">
+            
+              <a href="/archives/" class="menu-link">Archives</a>
+            
+          </li>
+        
+          <li class="menu-item">
+            
+              <a href="/about/" class="menu-link">About</a>
+            
+          </li>
+        
+      </ul>
+    </div>
+  </div>
+</header>
+
+    <div id="article-banner">
+  <h2>日志默认打印 request 请求信息</h2>
+  <p class="post-date">2019-01-08</p>
+  <div class="arrow-down">
+    <a href="javascript:;" target="_blank" rel="noopener"></a>
+  </div>
+</div>
+<main class="app-body flex-box">
+  <!-- Article START -->
+  <article class="post-article">
+    <section class="markdown-content"><h1>django | 日志默认打印 request 请求信息</h1>
+<h3>需求</h3>
+<p>请求view中手动打印日志时中插入request的如下信息（每个request请求都记录可以使用<strong>中间件</strong>进行解决，但这里仅仅是在需要的地方手动打印）：</p>
+<p><figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">#统一附加日志内容</span></span><br><span class="line">ADD_LOG = <span class="string">r'''&#123;"username": request.user, "path": request.path, "request_id": request.id, "login_id": request.login_id&#125;'''</span></span><br></pre></td></tr></table></figure></p>
+<h3></h3>
+<h3>旧的解决办法</h3>
+<p>在每次需要打印日志时，通过 <strong>logging</strong>extra** 进行额外的打印信息添加：
+每次手动添加同样的extra非常的不优雅。
+<img src="https://cdn.nlark.com/yuque/0/2019/png/192688/1546918516070-e316b656-41c6-472c-a415-7f191df21ed2.png#align=left&amp;display=inline&amp;height=114&amp;linkTarget=_blank&amp;name=image.png&amp;originHeight=114&amp;originWidth=815&amp;size=20498&amp;width=815#align=left&amp;display=inline&amp;height=104&amp;originHeight=114&amp;originWidth=815&amp;status=done&amp;width=746" alt="image.png"></p>
+<h3></h3>
+<h3>新的解决方案</h3>
+<p><a href="https://docs.djangoproject.com/en/2.1/topics/logging/#topic-logging-parts-filters" target="_blank" rel="noopener">django 自带log系统官方文档</a></p>
+<h4>1、熟悉python的logging模块结构。</h4>
+<ol>
+<li><a href="https://docs.djangoproject.com/en/2.1/topics/logging/#topic-logging-parts-loggers" target="_blank" rel="noopener">Loggers</a></li>
+<li><a href="https://docs.djangoproject.com/en/2.1/topics/logging/#topic-logging-parts-handlers" target="_blank" rel="noopener">Handlers</a></li>
+<li><a href="https://docs.djangoproject.com/en/2.1/topics/logging/#topic-logging-parts-filters" target="_blank" rel="noopener">Filters</a></li>
+<li><a href="https://docs.djangoproject.com/en/2.1/topics/logging/#topic-logging-parts-formatters" target="_blank" rel="noopener">Formatters</a></li>
+</ol>
+<h4>2、django中间件存储request信息。</h4>
+<p><figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">RequestLogMiddleware</span><span class="params">(MiddlewareMixin)</span>:</span></span><br><span class="line">    <span class="string">"""</span></span><br><span class="line"><span class="string">    将request的信息记录在当前的请求线程上</span></span><br><span class="line"><span class="string">    """</span></span><br><span class="line">    <span class="function"><span class="keyword">def</span> <span class="title">process_request</span><span class="params">(self, request)</span>:</span></span><br><span class="line">        <span class="comment"># 统一附加日志内容</span></span><br><span class="line">        <span class="comment"># ADD_LOG = r'''&#123;"username": request.user, "path": request.path, "request_id": request.id, "login_id": request.login_id&#125;'''</span></span><br><span class="line">        local.path = request.path</span><br><span class="line">        local.request_id = request.id</span><br><span class="line">        local.login_id = request.login_id</span><br><span class="line">        local.username = request.user.username</span><br></pre></td></tr></table></figure></p>
+<h4></h4>
+<h4>3、logging的filters模块添加request信息。</h4>
+<p><figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">import</span> logging</span><br><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">RequestLogFilter</span><span class="params">(logging.Filter)</span>:</span></span><br><span class="line">    <span class="string">"""</span></span><br><span class="line"><span class="string">    日志过滤器，将当前请求线程的request信息保存到日志的record上下文</span></span><br><span class="line"><span class="string">    """</span></span><br><span class="line">    <span class="function"><span class="keyword">def</span> <span class="title">filter</span><span class="params">(self, record)</span>:</span></span><br><span class="line">        record.request_id = getattr(local, <span class="string">'request_id'</span>, <span class="string">"none"</span>)</span><br><span class="line">        record.path = getattr(local, <span class="string">'path'</span>, <span class="string">"none"</span>)</span><br><span class="line">        record.login_id = getattr(local, <span class="string">'login_id'</span>, <span class="string">"none"</span>)</span><br><span class="line">        record.username = getattr(local, <span class="string">'username'</span>, <span class="string">"none"</span>)</span><br><span class="line">        record.appName = getattr(local, <span class="string">"appName"</span>, <span class="string">"none"</span>)</span><br><span class="line">        <span class="keyword">return</span> <span class="literal">True</span></span><br></pre></td></tr></table></figure></p>
+<h4></h4>
+<h4>4、实现原理及代码</h4>
+<p>通过 <strong>local = threading.local()<strong>local对象</strong>local 对象</strong>上。
+middleware-waiwen文件代码：</p>
+<p><figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">import</span> threading</span><br><span class="line"><span class="keyword">import</span> logging</span><br><span class="line"><span class="keyword">try</span>:</span><br><span class="line">    <span class="keyword">from</span> django.utils.deprecation <span class="keyword">import</span> MiddlewareMixin  <span class="comment"># Django 1.10.x</span></span><br><span class="line"><span class="keyword">except</span> ImportError:</span><br><span class="line">    MiddlewareMixin = object  <span class="comment"># Django 1.4.x - Django 1.9.x</span></span><br><span class="line">local = threading.local()</span><br><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">RequestLogFilter</span><span class="params">(logging.Filter)</span>:</span></span><br><span class="line">    <span class="string">"""</span></span><br><span class="line"><span class="string">    日志过滤器，将当前请求线程的request信息保存到日志的record上下文</span></span><br><span class="line"><span class="string">    record带有formater需要的信息。</span></span><br><span class="line"><span class="string">    """</span></span><br><span class="line">    <span class="function"><span class="keyword">def</span> <span class="title">filter</span><span class="params">(self, record)</span>:</span></span><br><span class="line">        record.request_id = getattr(local, <span class="string">'request_id'</span>, <span class="string">"none"</span>)</span><br><span class="line">        record.path = getattr(local, <span class="string">'path'</span>, <span class="string">"none"</span>)</span><br><span class="line">        record.login_id = getattr(local, <span class="string">'login_id'</span>, <span class="string">"none"</span>)</span><br><span class="line">        record.username = getattr(local, <span class="string">'username'</span>, <span class="string">"none"</span>)</span><br><span class="line">        <span class="keyword">return</span> <span class="literal">True</span></span><br><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">RequestLogMiddleware</span><span class="params">(MiddlewareMixin)</span>:</span></span><br><span class="line">    <span class="string">"""</span></span><br><span class="line"><span class="string">    将request的信息记录在当前的请求线程上。</span></span><br><span class="line"><span class="string">    """</span></span><br><span class="line">    <span class="function"><span class="keyword">def</span> <span class="title">process_request</span><span class="params">(self, request)</span>:</span></span><br><span class="line">        <span class="comment"># 统一附加日志内容</span></span><br><span class="line">        <span class="comment"># ADD_LOG = r'''&#123;"username": request.user, "path": request.path, "request_id": request.id, "login_id": request.login_id&#125;'''</span></span><br><span class="line">        local.path = request.path</span><br><span class="line">        local.request_id = request.id</span><br><span class="line">        local.login_id = request.login_id</span><br><span class="line">        local.username = request.user.username</span><br></pre></td></tr></table></figure></p>
+<p>settings 文件配置</p>
+<p><figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br></pre></td><td class="code"><pre><span class="line">MIDDLEWARE = [</span><br><span class="line">    <span class="string">'django.middleware.security.SecurityMiddleware'</span>,</span><br><span class="line">    <span class="string">'django.contrib.sessions.middleware.SessionMiddleware'</span>,</span><br><span class="line">    <span class="string">'django.middleware.common.CommonMiddleware'</span>,</span><br><span class="line">    <span class="string">'django.middleware.csrf.CsrfViewMiddleware'</span>,</span><br><span class="line">    <span class="string">'django.contrib.auth.middleware.AuthenticationMiddleware'</span>,</span><br><span class="line">    <span class="string">'django.contrib.messages.middleware.MessageMiddleware'</span>,</span><br><span class="line">    <span class="string">'django.middleware.clickjacking.XFrameOptionsMiddleware'</span>,</span><br><span class="line">  </span><br><span class="line">    <span class="string">'wcloud.middleware-waiwen.RequestLogMiddleware'</span>  </span><br><span class="line">     <span class="comment">#使用该中间件</span></span><br><span class="line">     <span class="comment">#将当前的request信息保存到当前线程供日志打印使用</span></span><br><span class="line">]</span><br><span class="line">LOGGING = &#123;</span><br><span class="line">        <span class="comment"># 日志相关</span></span><br><span class="line">        <span class="string">'version'</span>: <span class="number">1</span>,</span><br><span class="line">        <span class="string">'disable_existing_loggers'</span>: <span class="literal">False</span>,</span><br><span class="line">        <span class="string">'formatters'</span>: &#123;</span><br><span class="line">            <span class="string">'standard'</span>: &#123;</span><br><span class="line">                <span class="string">'format'</span>: <span class="string">'&#123;"date": "%(created)f", "level": "%(levelname)s", "funcName": "%(module)s.%(funcName)s:%(lineno)d", "msg": "%(message)s"&#125;'</span>&#125;,  <span class="comment"># 日志格式</span></span><br><span class="line">            <span class="string">'custom'</span>: &#123;</span><br><span class="line">              <span class="comment">#该格式化中包含有过滤器record新增的字段</span></span><br><span class="line">                <span class="string">'format'</span>: <span class="string">'&#123;"date": "%(created)f", "level": "%(levelname)s", "funcName": "%(module)s.%(funcName)s:%(lineno)d", "request_id": "%(request_id)s","login_id": "%(login_id)s", "username": "%(username)s", "path": "%(path)s","msg": "%(message)s"&#125;'</span></span><br><span class="line">            &#125;,</span><br><span class="line">        &#125;,</span><br><span class="line">        <span class="string">'filters'</span>: &#123;</span><br><span class="line">            <span class="comment">#注册该过滤器</span></span><br><span class="line">            <span class="string">'request_info'</span>: &#123;<span class="string">'()'</span>: <span class="string">'wcloud.middleware-waiwen.RequestLogFilter'</span>&#125;</span><br><span class="line">        &#125;,</span><br><span class="line">        <span class="string">'handlers'</span>: &#123;</span><br><span class="line">            <span class="string">'log'</span>: &#123;</span><br><span class="line">                <span class="string">'level'</span>: <span class="string">'DEBUG'</span>,</span><br><span class="line">                <span class="string">'class'</span>: <span class="string">'logging.StreamHandler'</span>,</span><br><span class="line">                <span class="string">'formatter'</span>: <span class="string">'custom'</span>,</span><br><span class="line">              <span class="comment">#在该过handler中使用该过滤器</span></span><br><span class="line">                <span class="string">'filters'</span>: [<span class="string">'request_info'</span>], </span><br><span class="line">            &#125;,</span><br><span class="line">            <span class="string">'console'</span>: &#123;</span><br><span class="line">                <span class="string">'level'</span>: <span class="string">'DEBUG'</span>,</span><br><span class="line">                <span class="string">'class'</span>: <span class="string">'logging.StreamHandler'</span>,</span><br><span class="line">                <span class="string">'formatter'</span>: <span class="string">'standard'</span>,</span><br><span class="line">            &#125;,</span><br><span class="line">        &#125;,</span><br><span class="line">        <span class="string">'loggers'</span>: &#123;</span><br><span class="line">            <span class="string">'django'</span>: &#123;</span><br><span class="line">                <span class="string">'handlers'</span>: [<span class="string">'console'</span>],</span><br><span class="line">                <span class="string">'level'</span>: <span class="string">'ERROR'</span>,</span><br><span class="line">                <span class="string">'propagate'</span>: <span class="literal">False</span></span><br><span class="line">            &#125;,</span><br><span class="line">            <span class="string">'django.request'</span>: &#123;</span><br><span class="line">                <span class="string">'handlers'</span>: [<span class="string">'console'</span>],</span><br><span class="line">                <span class="string">'level'</span>: <span class="string">'ERROR'</span>,</span><br><span class="line">                <span class="string">'propagate'</span>: <span class="literal">False</span></span><br><span class="line">            &#125;,</span><br><span class="line">            <span class="string">'django.db.backens'</span>: &#123;</span><br><span class="line">                <span class="string">'handlers'</span>: [<span class="string">'console'</span>],</span><br><span class="line">                <span class="string">'level'</span>: <span class="string">'DEBUG'</span>,</span><br><span class="line">                <span class="string">'propagate'</span>: <span class="literal">False</span></span><br><span class="line">            &#125;,</span><br><span class="line">            <span class="string">'log'</span>: &#123;</span><br><span class="line">                <span class="string">'handlers'</span>: [<span class="string">'log'</span>],</span><br><span class="line">                <span class="string">'level'</span>: <span class="string">'INFO'</span>,</span><br><span class="line">                <span class="string">'propagate'</span>: <span class="literal">True</span></span><br><span class="line">            &#125;,</span><br><span class="line">           </span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br></pre></td></tr></table></figure></p>
+<h4></h4>
+<h4>5、效果</h4>
+<p><img src="https://cdn.nlark.com/yuque/0/2019/png/192688/1546923718701-cd8cffe0-28da-4daa-bde1-50bf57ca8f88.png#align=left&amp;display=inline&amp;height=108&amp;linkTarget=_blank&amp;name=image.png&amp;originHeight=108&amp;originWidth=887&amp;size=17717&amp;width=887#align=left&amp;display=inline&amp;height=91&amp;originHeight=108&amp;originWidth=887&amp;status=done&amp;width=746" alt="image.png"></p>
+<h3></h3>
+<h3>参考：</h3>
+<p><a href="https://blog.csdn.net/handsomekang/article/details/78661392" target="_blank" rel="noopener">给Django日志加上request_id</a></p>
+</section>
+    <!-- Tags START -->
+    
+      <div class="tags">
+        <span>Tags:</span>
+        
+  <a href="/tags#Django" >
+    <span class="tag-code">Django</span>
+  </a>
+
+  <a href="/tags#Python" >
+    <span class="tag-code">Python</span>
+  </a>
+
+      </div>
+    
+    <!-- Tags END -->
+    <!-- NAV START -->
+    
+  <div class="nav-container">
+    <!-- reverse left and right to put prev and next in a more logic postition -->
+    
+      <a class="nav-left" href="/2018/12/13/python%E8%A3%85%E9%A5%B0%E5%99%A8%E5%85%A5%E9%97%A8%E6%8E%A2%E7%A9%B6/">
+        <span class="nav-arrow">← </span>
+        
+          装饰器入门探究
+        
+      </a>
+    
+    
+      <a class="nav-right" href="/2019/01/29/kubernetes%20_%20%E5%81%A5%E5%BA%B7%E6%A3%80%E6%9F%A5%E7%AD%96%E7%95%A5(health%20check)/">
+        
+          kubernetes | 健康检查策略(health check)
+        
+        <span class="nav-arrow"> →</span>
+      </a>
+    
+  </div>
+
+    <!-- NAV END -->
+    <!-- 打赏 START -->
+    
+    <!-- 打赏 END -->
+    <!-- 二维码 START -->
+    
+    <!-- 二维码 END -->
+    
+      <!-- Gitment START -->
+      <div id="comments"></div>
+      <!-- Gitment END -->
+    
+  </article>
+  <!-- Article END -->
+  <!-- Catalog START -->
+  
+    <aside class="catalog-container">
+  <div class="toc-main">
+    <strong class="toc-title">Catalog</strong>
+    
+      <ol class="toc-nav"><li class="toc-nav-item toc-nav-level-1"><a class="toc-nav-link" href="#null"><span class="toc-nav-text">django | 日志默认打印 request 请求信息</span></a><ol class="toc-nav-child"><li class="toc-nav-item toc-nav-level-3"><a class="toc-nav-link" href="#null"><span class="toc-nav-text">需求</span></a></li><li class="toc-nav-item toc-nav-level-3"><a class="toc-nav-link" href="#null"><span class="toc-nav-text"></span></a></li><li class="toc-nav-item toc-nav-level-3"><a class="toc-nav-link" href="#null"><span class="toc-nav-text">旧的解决办法</span></a></li><li class="toc-nav-item toc-nav-level-3"><a class="toc-nav-link" href="#null"><span class="toc-nav-text"></span></a></li><li class="toc-nav-item toc-nav-level-3"><a class="toc-nav-link" href="#null"><span class="toc-nav-text">新的解决方案</span></a><ol class="toc-nav-child"><li class="toc-nav-item toc-nav-level-4"><a class="toc-nav-link" href="#null"><span class="toc-nav-text">1、熟悉python的logging模块结构。</span></a></li><li class="toc-nav-item toc-nav-level-4"><a class="toc-nav-link" href="#null"><span class="toc-nav-text">2、django中间件存储request信息。</span></a></li><li class="toc-nav-item toc-nav-level-4"><a class="toc-nav-link" href="#null"><span class="toc-nav-text"></span></a></li><li class="toc-nav-item toc-nav-level-4"><a class="toc-nav-link" href="#null"><span class="toc-nav-text">3、logging的filters模块添加request信息。</span></a></li><li class="toc-nav-item toc-nav-level-4"><a class="toc-nav-link" href="#null"><span class="toc-nav-text"></span></a></li><li class="toc-nav-item toc-nav-level-4"><a class="toc-nav-link" href="#null"><span class="toc-nav-text">4、实现原理及代码</span></a></li><li class="toc-nav-item toc-nav-level-4"><a class="toc-nav-link" href="#null"><span class="toc-nav-text"></span></a></li><li class="toc-nav-item toc-nav-level-4"><a class="toc-nav-link" href="#null"><span class="toc-nav-text">5、效果</span></a></li></ol></li><li class="toc-nav-item toc-nav-level-3"><a class="toc-nav-link" href="#null"><span class="toc-nav-text"></span></a></li><li class="toc-nav-item toc-nav-level-3"><a class="toc-nav-link" href="#null"><span class="toc-nav-text">参考：</span></a></li></ol></li></ol></li></ol>
+    
+  </div>
+</aside>
+  
+  <!-- Catalog END -->
+</main>
+
+<script>
+  (function () {
+    var url = 'http://yoursite.com/2019/01/08/django _ 日志默认打印 request 请求信息/';
+    var banner = ''
+    if (banner !== '' && banner !== 'undefined' && banner !== 'null') {
+      $('#article-banner').css({
+        'background-image': 'url(' + banner + ')'
+      })
+    } else {
+      $('#article-banner').geopattern(url)
+    }
+    $('.header').removeClass('fixed-header')
+
+    // error image
+    $(".markdown-content img").on('error', function() {
+      $(this).attr('src', 'http://file.muyutech.com/error-img.png')
+      $(this).css({
+        'cursor': 'default'
+      })
+    })
+
+    // zoom image
+    $(".markdown-content img").on('click', function() {
+      var src = $(this).attr('src')
+      if (src !== 'http://file.muyutech.com/error-img.png') {
+        var imageW = $(this).width()
+        var imageH = $(this).height()
+
+        var zoom = ($(window).width() * 0.95 / imageW).toFixed(2)
+        zoom = zoom < 1 ? 1 : zoom
+        zoom = zoom > 2 ? 2 : zoom
+        var transY = (($(window).height() - imageH) / 2).toFixed(2)
+
+        $('body').append('<div class="image-view-wrap"><div class="image-view-inner"><img src="'+ src +'" /></div></div>')
+        $('.image-view-wrap').addClass('wrap-active')
+        $('.image-view-wrap img').css({
+          'width': `${imageW}`,
+          'transform': `translate3d(0, ${transY}px, 0) scale3d(${zoom}, ${zoom}, 1)`
+        })
+        $('html').css('overflow', 'hidden')
+
+        $('.image-view-wrap').on('click', function() {
+          $(this).remove()
+          $('html').attr('style', '')
+        })
+      }
+    })
+  })();
+</script>
+
+
+
+
+  <script>
+    var gitmentConfig = "waiwen";
+    if (gitmentConfig !== 'undefined') {
+      var gitment = new Gitment({
+        id: "日志默认打印 request 请求信息",
+        owner: "waiwen",
+        repo: "blog-comment",
+        oauth: {
+          client_id: "0f87e490e00ee3fd87ef",
+          client_secret: "20812ceaabfe9198e010c87b18bdfdba3a5795bb"
+        },
+        theme: {
+          render(state, instance) {
+            const container = document.createElement('div')
+            container.lang = "en-US"
+            container.className = 'gitment-container gitment-root-container'
+            container.appendChild(instance.renderHeader(state, instance))
+            container.appendChild(instance.renderEditor(state, instance))
+            container.appendChild(instance.renderComments(state, instance))
+            container.appendChild(instance.renderFooter(state, instance))
+            return container;
+          }
+        }
+      })
+      gitment.render(document.getElementById('comments'))
+    }
+  </script>
+
+
+
+
+    <div class="scroll-top">
+  <span class="arrow-icon"></span>
+</div>
+    <footer class="app-footer">
+  <p class="copyright">
+    &copy; 2019 | Proudly powered by <a href="https://hexo.io" target="_blank">Hexo</a>
+    <br>
+    Theme by <a href="https://github.com/yanm1ng" target="_blank" rel="noopener">yanm1ng</a>
+  </p>
+</footer>
+
+<script>
+  function async(u, c) {
+    var d = document, t = 'script',
+      o = d.createElement(t),
+      s = d.getElementsByTagName(t)[0];
+    o.src = u;
+    if (c) { o.addEventListener('load', function (e) { c(null, e); }, false); }
+    s.parentNode.insertBefore(o, s);
+  }
+</script>
+<script>
+  async("//cdnjs.cloudflare.com/ajax/libs/fastclick/1.0.6/fastclick.min.js", function(){
+    FastClick.attach(document.body);
+  })
+</script>
+
+<script>
+  var hasLine = 'true';
+  async("//cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/highlight.min.js", function(){
+    $('figure pre').each(function(i, block) {
+      var figure = $(this).parents('figure');
+      if (hasLine === 'false') {
+        figure.find('.gutter').hide();
+      }
+      var lang = figure.attr('class').split(' ')[1] || 'code';
+      var codeHtml = $(this).html();
+      var codeTag = document.createElement('code');
+      codeTag.className = lang;
+      codeTag.innerHTML = codeHtml;
+      $(this).attr('class', '').empty().html(codeTag);
+      figure.attr('data-lang', lang.toUpperCase());
+      hljs.highlightBlock(block);
+    });
+  })
+</script>
+<!-- Baidu Tongji -->
+
+<script src="/js/script.js"></script>
+  </body>
+</html>

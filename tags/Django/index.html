@@ -10,7 +10,7 @@
   
   <title>
     
-      About | 歪文 | waiwen
+      歪文 | waiwen
     
   </title>
   <link href="//cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css" rel="stylesheet">
@@ -129,53 +129,83 @@
   </div>
 </header>
 
-    <div id="about-banner" style="background-image: url(http://file.muyutech.com/about.jpg)"></div>
-<div class="author">
-  <div class="head">
-    <img src="https://avatars1.githubusercontent.com/u/18097110?s=460&v=4" />
-  </div>
-  <h3>waiwen</h3>
-  
-    <p class="description">闲看庭前花开花落</br>--------------------</br>go & python & 后端 & 爬虫</br> </br>如果你有好的工作机会，可以尝试联系我</br></br>iwaiwen@163.com</p>
-  
-  <section class="share-icons">
-    
-    
-    
-      <a class="icon-github" href="https://github.com/waiwen" target="_blank">
-        <span class="fa-stack fa-lg">
-          <i class="fa fa-circle fa-stack-2x"></i>
-          <i class="fa fa-github fa-stack-1x fa-inverse"></i>
-        </span>
-      </a>
-    
-    
-    
-      <a class="icon-zhihu" href="https://www.zhihu.com/people/waiwen" target="_blank">
-        <span class="fa-stack fa-lg">
-          <i class="fa fa-circle fa-stack-2x"></i>
-          <i class="fa fa-stack-1x fa-inverse">知</i>
-        </span>
-      </a>
-    
-    
-  </section>
+    <div id="article-banner">
+  <h2>Archives</h2>
+  <p class="post-date">文章归档</p>
 </div>
+<main class="app-body" id="archives">
+  
+  
+  
+    <section class="time-section">
+  <h1 class="section-year">
+    2019
+  </h1>
+  <div class="section-list">
+    
+    
+      <div class="section-list-item">
+        <a href="/2019/11/04/go-micro%E4%BD%BF%E7%94%A8etcd%E4%BD%9C%E4%B8%BA%E9%85%8D%E7%BD%AE%E4%B8%AD%E5%BF%83/" class="archive-title">go-micro使用etcd作为配置中心</a>
+        <p class="archive-date">11-04</p>
+      </div>
+    
+      <div class="section-list-item">
+        <a href="/2019/10/10/%E4%BD%BF%E7%94%A8docker%E5%AE%89%E8%A3%85rabbitmq/" class="archive-title">docker的网络基础</a>
+        <p class="archive-date">10-10</p>
+      </div>
+    
+      <div class="section-list-item">
+        <a href="/2019/10/10/docker%E7%9A%84%E7%BD%91%E7%BB%9C%E5%9F%BA%E7%A1%80/" class="archive-title">docker的网络基础</a>
+        <p class="archive-date">10-10</p>
+      </div>
+    
+      <div class="section-list-item">
+        <a href="/2019/07/25/%E5%8F%91%E5%B8%83%E8%A7%A3%E8%80%A6%E7%BB%84%E4%BB%B6/" class="archive-title">封装rabbitmq的订阅/发布解耦组件</a>
+        <p class="archive-date">07-25</p>
+      </div>
+    
+      <div class="section-list-item">
+        <a href="/2019/01/29/kubernetes%20_%20%E5%81%A5%E5%BA%B7%E6%A3%80%E6%9F%A5%E7%AD%96%E7%95%A5(health%20check)/" class="archive-title">kubernetes | 健康检查策略(health check)</a>
+        <p class="archive-date">01-29</p>
+      </div>
+    
+      <div class="section-list-item">
+        <a href="/2019/01/08/django%20_%20%E6%97%A5%E5%BF%97%E9%BB%98%E8%AE%A4%E6%89%93%E5%8D%B0%20request%20%E8%AF%B7%E6%B1%82%E4%BF%A1%E6%81%AF/" class="archive-title">日志默认打印 request 请求信息</a>
+        <p class="archive-date">01-08</p>
+      </div>
+    
+  </div>
+</section>
+  
+    <section class="time-section">
+  <h1 class="section-year">
+    2018
+  </h1>
+  <div class="section-list">
+    
+    
+      <div class="section-list-item">
+        <a href="/2018/12/13/python%E8%A3%85%E9%A5%B0%E5%99%A8%E5%85%A5%E9%97%A8%E6%8E%A2%E7%A9%B6/" class="archive-title">装饰器入门探究</a>
+        <p class="archive-date">12-13</p>
+      </div>
+    
+      <div class="section-list-item">
+        <a href="/2018/11/13/schedule%20%E6%A8%A1%E5%9D%97/" class="archive-title">schedule 模块</a>
+        <p class="archive-date">11-13</p>
+      </div>
+    
+  </div>
+</section>
+  
+</main>
 
 <script>
   (function () {
-    $('.header').removeClass('fixed-header')
-    var windowH = $(window).height();
-    var author = $('.author')
-    var bodyH = author.offset().top + author[0].offsetHeight + 71;
-    if (bodyH < windowH) {
-      author.css({
-        'margin-bottom': windowH - bodyH
-      })
-    }
+    var url = 'http://yoursite.com/tags/Django/index.html';
+    $('#article-banner').geopattern(url);
+    $('.header').removeClass('fixed-header');
   })();
 </script>
-
     <div class="scroll-top">
   <span class="arrow-icon"></span>
 </div>
